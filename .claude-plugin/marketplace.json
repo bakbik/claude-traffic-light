@@ -1,0 +1,14 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "claude-traffic-light",
+  "description": "Marketplace for the Claude traffic light plugin.",
+  "owner": { "name": "bakbik", "url": "https://github.com/bakbik" },
+  "plugins": [
+    {
+      "name": "claude-traffic-light",
+      "description": "Physical USB traffic light showing Claude Code session status.",
+      "source": "./",
+      "category": "productivity"
+    }
+  ]
+}
