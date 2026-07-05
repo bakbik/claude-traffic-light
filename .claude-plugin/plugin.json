@@ -1,20 +1,20 @@
 {
   "name": "claude-traffic-light",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Physical USB traffic light showing Claude Code session status (red=input needed, yellow=working, green=done, off=idle). Drives an ESP32 over serial.",
   "author": { "name": "sapir" },
   "hooks": {
     "UserPromptSubmit": [
-      { "hooks": [ { "type": "command", "command": "powershell -NoProfile -File \"${CLAUDE_PLUGIN_ROOT}/scripts/traffic.ps1\" Y", "timeout": 5 } ] }
+      { "hooks": [ { "type": "command", "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/scripts/traffic.ps1\" Y", "timeout": 5 } ] }
     ],
     "Notification": [
-      { "hooks": [ { "type": "command", "command": "powershell -NoProfile -File \"${CLAUDE_PLUGIN_ROOT}/scripts/traffic.ps1\" R", "timeout": 5 } ] }
+      { "hooks": [ { "type": "command", "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/scripts/traffic.ps1\" R", "timeout": 5 } ] }
     ],
     "Stop": [
-      { "hooks": [ { "type": "command", "command": "powershell -NoProfile -File \"${CLAUDE_PLUGIN_ROOT}/scripts/traffic.ps1\" G", "timeout": 5 } ] }
+      { "hooks": [ { "type": "command", "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/scripts/traffic.ps1\" G", "timeout": 5 } ] }
     ],
     "SessionStart": [
-      { "hooks": [ { "type": "command", "command": "powershell -NoProfile -File \"${CLAUDE_PLUGIN_ROOT}/scripts/traffic.ps1\" O", "timeout": 5 } ] }
+      { "hooks": [ { "type": "command", "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/scripts/traffic.ps1\" O", "timeout": 5 } ] }
     ]
   }
 }
