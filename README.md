@@ -23,7 +23,7 @@ Stop              ───►  traffic.ps1 G  ───►         "G"         
 SessionStart      ───►  traffic.ps1 G  ───►         "G"             ───►  ESP32 lights green (standby)
 ```
 
-The firmware speaks a trivial one-character serial protocol (`R`/`Y`/`G`/`O`). The PowerShell helper (`scripts/traffic.ps1`) finds the board's COM port and writes the character. Everything is stateless and instant.
+The firmware speaks a trivial one-character serial protocol (`R`/`Y`/`G`/`O`). A tiny per-platform helper finds the board's serial port and writes the character: `scripts/traffic.ps1` on Windows, `scripts/traffic.sh` on Linux/macOS. Everything is stateless and instant.
 
 ---
 
@@ -105,7 +105,7 @@ Replace `COM8` with your board's port. Native USB CDC means opening the port fro
 
 ## Part 3 — Install the plugin
 
-> **Windows + PowerShell only** (the helper is a `.ps1`). Run these in a real `claude` **terminal** — the interactive `/plugin` menu may not work in embedded/desktop hosts; the CLI does.
+> Works on **Windows, Linux, and macOS**. Run these in a real `claude` **terminal** — the interactive `/plugin` menu may not work in embedded/desktop hosts; the CLI does.
 
 ```bash
 claude plugin marketplace add bakbik/claude-traffic-light
@@ -118,11 +118,19 @@ Then **fully restart** Claude Code. On each session the light will now track you
 
 ## Configuration
 
-- **COM port** is auto-detected via the Espressif USB vendor ID (`303A`).
-- If detection picks the wrong port, set an override (User environment variable so hook processes inherit it):
+- **Serial port** is auto-detected: on Windows via the Espressif USB vendor ID (`303A`), on Linux via `/dev/serial/by-id/*Espressif*`, on macOS via `/dev/cu.usbmodem*`.
+- If detection picks the wrong port, set `TRAFFIC_COM` as an override:
 
   ```powershell
-  setx TRAFFIC_COM COM8
+  setx TRAFFIC_COM COM8            # Windows
+  ```
+  ```bash
+  export TRAFFIC_COM=/dev/ttyACM0  # Linux/macOS (put it in your shell profile)
+  ```
+- **Linux:** your user needs write access to the serial device — add yourself to the `dialout` group and re-login:
+
+  ```bash
+  sudo usermod -aG dialout "$USER"
   ```
 
 ---
@@ -134,13 +142,14 @@ Then **fully restart** Claude Code. On each session the light will now track you
 | **`running scripts is disabled on this system`** | PowerShell ExecutionPolicy. The plugin hooks already pass `-ExecutionPolicy Bypass`; if you call `traffic.ps1` yourself, add that flag or `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`. |
 | **Hooks never fire** (no LED change) | Command hooks run in a real `claude` **CLI** process. Some embedded/desktop hosts don't execute plugin command-hooks. Verify with a headless run: `"hi" \| claude -p`, then check `scripts/traffic.log`. |
 | **`sent=False` in the log** | The board's COM port wasn't found or was busy. Check the cable is a data cable, the board enumerates a COM port, and set `TRAFFIC_COM` if needed. |
+| **`sent=false` on Linux** | Usually a permissions issue: the device is `root:dialout`. Add yourself to `dialout` (see Configuration) and re-login. Otherwise check `ls /dev/serial/by-id/` and set `TRAFFIC_COM`. |
 | **An LED never lights** | Polarity (flip the LED), missing GND, or wrong GPIO. Run the single-LED sanity check above. |
 | **`unable to verify the first certificate`** on install/update | TLS interception by antivirus/proxy (e.g. Avast HTTPS scanning). Node doesn't trust the AV root. Export the AV root CA to a `.pem` and set `NODE_EXTRA_CA_CERTS` to it, or disable the AV's HTTPS scanning. |
 | **No COM port at all** | Charge-only cable, or missing USB driver. Use a data cable; check Device Manager. |
 
 ### Debug log
 
-`scripts/traffic.ps1` appends every call to `scripts/traffic.log` (timestamp, color, `sent=True/False`). It's the fastest way to see whether hooks fire and whether the serial write lands.
+Both helpers append every call to `scripts/traffic.log` (timestamp, color, `sent=True/False`). It's the fastest way to see whether hooks fire and whether the serial write lands.
 
 ---
 
@@ -151,8 +160,9 @@ Then **fully restart** Claude Code. On each session the light will now track you
   plugin.json        # hook definitions (UserPromptSubmit/Notification/Stop/SessionStart)
   marketplace.json   # marketplace manifest
 scripts/
-  traffic.ps1        # CLI entry called by hooks: arg R|Y|G|O -> serial write
-  TrafficLight.psm1  # COM-port resolution + serial send
+  traffic.ps1        # Windows entry called by hooks: arg R|Y|G|O -> serial write
+  TrafficLight.psm1  # COM-port resolution + serial send (Windows)
+  traffic.sh         # Linux/macOS entry: same protocol, port via /dev/serial/by-id
 firmware/
   traffic_light.ino  # ESP32 firmware (single-char serial -> LEDs)
 ```
