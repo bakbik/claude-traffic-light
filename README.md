@@ -127,11 +127,13 @@ Then **fully restart** Claude Code. On each session the light will now track you
   ```bash
   export TRAFFIC_COM=/dev/ttyACM0  # Linux/macOS (put it in your shell profile)
   ```
-- **Linux:** your user needs write access to the serial device — add yourself to the `dialout` group and re-login:
+- **Linux:** your user needs write access to the serial device. One-time setup (installs a udev rule for the Espressif VID, survives replugs, no re-login needed):
 
   ```bash
-  sudo usermod -aG dialout "$USER"
+  sudo scripts/setup-linux.sh
   ```
+
+  Alternative: add yourself to the `dialout` group (`sudo usermod -aG dialout "$USER"`) and re-login.
 
 ---
 
@@ -142,7 +144,7 @@ Then **fully restart** Claude Code. On each session the light will now track you
 | **`running scripts is disabled on this system`** | PowerShell ExecutionPolicy. The plugin hooks already pass `-ExecutionPolicy Bypass`; if you call `traffic.ps1` yourself, add that flag or `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`. |
 | **Hooks never fire** (no LED change) | Command hooks run in a real `claude` **CLI** process. Some embedded/desktop hosts don't execute plugin command-hooks. Verify with a headless run: `"hi" \| claude -p`, then check `scripts/traffic.log`. |
 | **`sent=False` in the log** | The board's COM port wasn't found or was busy. Check the cable is a data cable, the board enumerates a COM port, and set `TRAFFIC_COM` if needed. |
-| **`sent=false` on Linux** | Usually a permissions issue: the device is `root:dialout`. Add yourself to `dialout` (see Configuration) and re-login. Otherwise check `ls /dev/serial/by-id/` and set `TRAFFIC_COM`. |
+| **`sent=false` on Linux** | Usually a permissions issue: the device is `root:dialout`. Run `sudo scripts/setup-linux.sh` (see Configuration). Otherwise check `ls /dev/serial/by-id/` and set `TRAFFIC_COM`. |
 | **An LED never lights** | Polarity (flip the LED), missing GND, or wrong GPIO. Run the single-LED sanity check above. |
 | **`unable to verify the first certificate`** on install/update | TLS interception by antivirus/proxy (e.g. Avast HTTPS scanning). Node doesn't trust the AV root. Export the AV root CA to a `.pem` and set `NODE_EXTRA_CA_CERTS` to it, or disable the AV's HTTPS scanning. |
 | **No COM port at all** | Charge-only cable, or missing USB driver. Use a data cable; check Device Manager. |
@@ -163,6 +165,7 @@ scripts/
   traffic.ps1        # Windows entry called by hooks: arg R|Y|G|O -> serial write
   TrafficLight.psm1  # COM-port resolution + serial send (Windows)
   traffic.sh         # Linux/macOS entry: same protocol, port via /dev/serial/by-id
+  setup-linux.sh     # one-time udev rule so the device is writable (run with sudo)
 firmware/
   traffic_light.ino  # ESP32 firmware (single-char serial -> LEDs)
 ```
