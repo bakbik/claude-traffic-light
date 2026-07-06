@@ -6,8 +6,7 @@ A Claude Code plugin that drives a **physical USB traffic light** showing your s
 |-------|---------|
 | 🔴 Red | Claude needs your input / a permission |
 | 🟡 Yellow | Claude is working |
-| 🟢 Green | Turn done (holds until your next prompt) |
-| ⚫ Off | Idle / session start |
+| 🟢 Green | Turn done / standby (holds until your next prompt; also the session-start color) |
 
 It's a small DIY build: an ESP32 with three LEDs, plugged into your PC over USB. The plugin fires on Claude session events and tells the board which LED to light.
 
@@ -21,7 +20,7 @@ Claude Code event          plugin hook              PC                    board
 UserPromptSubmit  ───►  traffic.ps1 Y  ───►  write "Y" to COM port  ───►  ESP32 lights yellow
 Notification      ───►  traffic.ps1 R  ───►         "R"             ───►  ESP32 lights red
 Stop              ───►  traffic.ps1 G  ───►         "G"             ───►  ESP32 lights green
-SessionStart      ───►  traffic.ps1 O  ───►         "O"             ───►  ESP32 all off
+SessionStart      ───►  traffic.ps1 G  ───►         "G"             ───►  ESP32 lights green (standby)
 ```
 
 The firmware speaks a trivial one-character serial protocol (`R`/`Y`/`G`/`O`). The PowerShell helper (`scripts/traffic.ps1`) finds the board's COM port and writes the character. Everything is stateless and instant.
